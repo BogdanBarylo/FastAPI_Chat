@@ -70,6 +70,8 @@ async def create_message(chat_id: str, message:
                               "id": message_id,
                               "text": message.text,
                               "ts": created_at})
+    timestamp_score = datetime.fromisoformat(created_at).timestamp()
+    await redis.zadd(f'chat:{chat_id}:messages', {message_id: timestamp_score})
     return new_message
 
 
@@ -84,38 +86,35 @@ async def get_messages(
     ts_message: str | None = Query(
         default=None,
         description="The time by which\
-        you want to receive messages")) -> GetMessagesResponse:
+        you want to receive messages"),
+        limit: int | None = Query(
+        default=10, description="Maximum number of\
+        returned messages")) -> GetMessagesResponse:
     chat_data = await redis.hgetall(f'chat:{chat_id}')
     if not chat_data:
         raise HTTPException(
             status_code=404,
             detail="Chat does not exist, please check if the id is correct")
     messages = []
-    cursor = 0
     if ts_message:
         date_filter = datetime.fromisoformat(ts_message)
-        date_filter = date_filter.replace(tzinfo=timezone.utc)
+        date_filter = date_filter.replace(tzinfo=timezone.utc).timestamp()
     else:
-        date_filter = None
-    while True:
-        cursor, keys = await redis.scan(cursor=cursor,
-                                        match=f'chat:{chat_id}:message:*',
-                                        count=10)
-        for key in keys:
-            message_data = await redis.hgetall(key)
-            message_time = datetime.fromisoformat(message_data.get("ts"))
-            message_time = message_time.replace(tzinfo=timezone.utc)
-            if date_filter is None or message_time < date_filter:
-                messages.append(CreateMessageResponse(
-                    chat_id=message_data["chat_id"],
-                    id=message_data["id"],
-                    text=message_data["text"],
-                    ts=message_data["ts"]
-                ))
-        if cursor == 0:
-            break
-    all_messages = GetMessagesResponse(messages=messages)
-    return all_messages
+        date_filter = "+inf"
+    message_ids = await redis.zrangebyscore(f'chat:{chat_id}:messages', '-inf',
+                                            date_filter, start=0, num=limit)
+    messages = []
+    for message_id in message_ids:
+        message_data = await redis.hgetall(
+            f'chat:{chat_id}:message:{message_id}')
+        if message_data:
+            messages.append(CreateMessageResponse(
+                chat_id=message_data["chat_id"],
+                id=message_data["id"],
+                text=message_data["text"],
+                ts=message_data["ts"]
+            ))
+    return GetMessagesResponse(messages=messages)
 
 
 @app.delete("/chats/{chat_id}")
@@ -125,5 +124,7 @@ async def delete_chat(chat_id: str) -> str:
         raise HTTPException(
             status_code=404,
             detail="Chat does not exist, please check if the id is correct")
-    await redis.delete(f'chat:{chat_id}')
+    message_keys = await redis.zrange(f'chat:{chat_id}:messages', 0, -1)
+    for message_key in message_keys:
+        await redis.delete(f'chat:{chat_id}:message:{message_key}')
     await redis.delete(f'chat:{chat_id}:messages')
