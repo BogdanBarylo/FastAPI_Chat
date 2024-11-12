@@ -1,16 +1,30 @@
 from fastapi import FastAPI, Query, HTTPException
 from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from datetime import datetime, timezone
 import aioredis
+from dotenv import load_dotenv
 from sqids import Sqids
 import json
 
+
+load_dotenv()
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix='APP_')
+    redis_url: str = Field(env="REDIS_URL")
+
+
+settings = Settings()
+redis = aioredis.from_url(settings.redis_url, decode_responses=True)
 app = FastAPI()
-redis = aioredis.from_url("redis://localhost:6379", decode_responses=True)
+
 
 def get_id(number):
     sqids = Sqids()
     return sqids.encode([number])
+
 
 def get_time():
     ts = datetime.now(timezone.utc)
