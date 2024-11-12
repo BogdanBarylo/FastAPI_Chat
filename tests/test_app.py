@@ -22,19 +22,19 @@ async def test_create_chat(client, redis):
             assert chat_data["ts"] == "2024-11-11T13:36:40"
 
 
-# @pytest.mark.asyncio
-# async def test_create_message(client, redis, test_data):
-#     with patch("chat.main.get_id") as get_id:
-#         get_id.return_value = "test_message_id"
-#         response = await client.post(f'/chats/CHT:test_id/messages', json={"text": "Hi"})
-#         response_data = response.json()
-#         message_data = await redis.hget(
-#             f'chat:CHT:test_id:message:test_message_id', "message_data"
-#         )
-#         message_data = json.loads(message_data)
-#         assert response.status_code == 200
-#         assert message_data["chat_id"] == "CHT:test_id"
-#         assert message_data["text"] == "Hi"
-#         assert message_data["message_id"] == "test_message_id"
+@pytest.mark.asyncio
+async def test_create_message(client, redis, test_data):
+    with patch("chat.main.get_id") as get_id:
+        get_id.return_value = "test_message_id"
+        response = await client.post(f'/chats/CHT:test_id/messages', json={"text": "Hi"})
+        response_data = response.json()
+        message_data = await redis.hget(
+            f'chat:CHT:test_id:message:test_message_id', "message_data"
+        )
+        message_data = json.loads(message_data)
+        assert response.status_code == 200
+        assert message_data["chat_id"] == "CHT:test_id"
+        assert message_data["text"] == "Hi"
+        assert message_data["message_id"] == "test_message_id"
         # assert ts_message == ts_response
 
