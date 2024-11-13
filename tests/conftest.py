@@ -6,22 +6,27 @@ import pytest_asyncio
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 from dotenv import load_dotenv
+import json
+from datetime import datetime
+
 
 load_dotenv()
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='APP_')
-    redis_url: str = Field(env="REDIS_TEST_URL")
+    redis_test_url: str = Field(env="REDIS_TEST_URL")
 
 settings = Settings()
 
 
 @pytest_asyncio.fixture
-async def redis():
-    redis = aioredis.from_url(settings.redis_url, decode_responses=True)
+async def redis(monkeypatch):
+    redis = aioredis.from_url(settings.redis_test_url, decode_responses=True)
+    monkeypatch.setattr("chat.main.redis", redis)
     yield redis
     await redis.flushdb()
+    await redis.close()
 
 
 @pytest_asyncio.fixture
@@ -32,15 +37,46 @@ async def client():
 
 @pytest_asyncio.fixture(scope="function")
 async def test_data(redis):
-    megadata = {
+    chat_data = {
+        "chat_id": "CHT:test_id",
+        "name": "Test Chat",
+        "ts": "2024-11-11T13:36:40"
+    }
+    messages = [
+        {
             "chat_id": "CHT:test_id",
-            "message_id": "MSG:test_id",
-            "text": "hi, its test!",
-            "ts": "2024-11-11T13:36:25",
+            "message_id": "MSG:test_id_1",
+            "text": "hi, its test 1!",
+            "ts": "2024-11-11T13:37:40",
+        },
+        {
+            "chat_id": "CHT:test_id",
+            "message_id": "MSG:test_id_2",
+            "text": "hello again, test 2!",
+            "ts": "2024-11-11T13:39:00",
         }
-    await redis.hset(
-        f'chat:{megadata["chat_id"]}:message:{megadata["message_id"]}', 
-        mapping=megadata
-    )
+    ]
+    async with redis.pipeline(transaction=True) as pipe:
+        await pipe.hset(f'chat:{chat_data["chat_id"]}', mapping=chat_data)
+        for message in messages:
+            ts = message["ts"]
+            timestamp_score = datetime.fromisoformat(ts).timestamp()
+            print(ts)
+            print(timestamp_score)
+            await pipe.hset(
+                f'chat:{message["chat_id"]}:message', 
+                message["message_id"], 
+                json.dumps(message)
+            )
+            await pipe.zadd(
+                f'chat:{message["chat_id"]}:messages:ts',
+                {message["message_id"]: timestamp_score}
+            )
+        await pipe.execute()
+    
     yield
-    await redis.delete(f'chat:{megadata["chat_id"]}:message:{megadata["message_id"]}')
+    await redis.delete(
+        'chat:{chat_data["chat_id"]}',
+        *(f'chat:{message["chat_id"]}:message' for message in messages),
+        f'chat:{messages[0]["chat_id"]}:messages:ts'
+    )

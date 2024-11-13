@@ -2,7 +2,7 @@ from fastapi import FastAPI, Query, HTTPException
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from datetime import datetime, timezone
-import aioredis
+from redis import asyncio as aioredis
 from dotenv import load_dotenv
 from sqids import Sqids
 import json
@@ -26,8 +26,7 @@ def get_id(number):
     return sqids.encode([number])
 
 
-def get_time():
-    ts = datetime.now(timezone.utc)
+def get_format_time(ts):
     formatted_ts = ts.strftime("%Y-%m-%dT%H:%M:%S")
     return formatted_ts
 
@@ -51,18 +50,19 @@ class CreateChatResponse(BaseModel):
 async def create_chat(chat: CreateChatRequest) -> CreateChatResponse:
     chat_number = await redis.incr("chat_id_counter")
     chat_id = f"CHT:{get_id(chat_number)}"
-    ts = get_time()
+    ts = datetime.now(timezone.utc)
+    formated_ts = get_format_time(ts)
     url = f"/chats/{chat_id}"
     await redis.hset(
         f"chat:{chat_id}",
         mapping={
             "chat_id": chat_id,
             "name": chat.name,
-            "ts": ts,
+            "ts": formated_ts,
         },
     )
     chat_response = CreateChatResponse(
-        chat_id=chat_id, name=chat.name, url=url, ts=ts
+        chat_id=chat_id, name=chat.name, url=url, ts=formated_ts
     )
     return chat_response
 
@@ -88,13 +88,14 @@ async def create_message(
 ) -> CreateMessageResponse:
     message_number = await redis.incr("message_id_counter")
     message_id = f"MSG:{get_id(message_number)}"
-    ts = get_time()
+    ts = datetime.now(timezone.utc)
+    formated_ts = get_format_time(ts)
     message_data = json.dumps(
         {
             "chat_id": chat_id,
             "message_id": message_id,
             "text": message.text,
-            "ts": ts,
+            "ts": formated_ts,
         }
     )
     timestamp_score = ts.timestamp()
@@ -105,7 +106,7 @@ async def create_message(
         )
         await pipe.execute()
     new_message = CreateMessageResponse(
-        chat_id=chat_id, message_id=message_id, text=message.text, ts=ts
+        chat_id=chat_id, message_id=message_id, text=message.text, ts=formated_ts
     )
     return new_message
 
