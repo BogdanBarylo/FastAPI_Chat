@@ -1,4 +1,3 @@
-import pytest
 import aioredis
 from chat.main import app
 from httpx import AsyncClient
@@ -14,8 +13,9 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix='APP_')
+    model_config = SettingsConfigDict(env_prefix="APP_")
     redis_test_url: str = Field(env="REDIS_TEST_URL")
+
 
 settings = Settings()
 
@@ -23,7 +23,7 @@ settings = Settings()
 @pytest_asyncio.fixture
 async def redis(monkeypatch):
     redis = aioredis.from_url(settings.redis_test_url, decode_responses=True)
-    monkeypatch.setattr("chat.main.redis", redis)
+    monkeypatch.setattr("chat.conf.redis", redis)
     yield redis
     await redis.flushdb()
     await redis.close()
@@ -40,7 +40,7 @@ async def test_data(redis):
     chat_data = {
         "chat_id": "CHT:test_id",
         "name": "Test Chat",
-        "ts": "2024-11-11T13:36:40"
+        "ts": "2024-11-11T13:36:40",
     }
     messages = [
         {
@@ -54,7 +54,7 @@ async def test_data(redis):
             "message_id": "MSG:test_id_2",
             "text": "hello again, test 2!",
             "ts": "2024-11-11T13:39:00",
-        }
+        },
     ]
     async with redis.pipeline(transaction=True) as pipe:
         await pipe.hset(f'chat:{chat_data["chat_id"]}', mapping=chat_data)
@@ -64,19 +64,19 @@ async def test_data(redis):
             print(ts)
             print(timestamp_score)
             await pipe.hset(
-                f'chat:{message["chat_id"]}:message', 
-                message["message_id"], 
-                json.dumps(message)
+                f'chat:{message["chat_id"]}:message',
+                message["message_id"],
+                json.dumps(message),
             )
             await pipe.zadd(
                 f'chat:{message["chat_id"]}:messages:ts',
-                {message["message_id"]: timestamp_score}
+                {message["message_id"]: timestamp_score},
             )
         await pipe.execute()
-    
+
     yield
     await redis.delete(
         'chat:{chat_data["chat_id"]}',
         *(f'chat:{message["chat_id"]}:message' for message in messages),
-        f'chat:{messages[0]["chat_id"]}:messages:ts'
+        f'chat:{messages[0]["chat_id"]}:messages:ts',
     )
