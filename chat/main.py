@@ -1,4 +1,5 @@
 from fastapi import Query, HTTPException, FastAPI
+from chat.conf import redis
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 from chat.db import (
@@ -15,7 +16,6 @@ from chat.db import (
 )
 
 app = FastAPI()
-
 
 class CreateChatRequest(BaseModel):
     name: str = Field(

@@ -2,7 +2,6 @@ from sqids import Sqids
 from chat.conf import redis
 import json
 
-
 # def make_pipeline():
 #     def wrapper(*args, **kwargs):
 

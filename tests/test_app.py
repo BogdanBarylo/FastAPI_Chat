@@ -7,7 +7,7 @@ import json
 @pytest.mark.asyncio
 async def test_create_chat(client, redis, monkeypatch):
     get_id = AsyncMock()
-    get_id.return_value = "test_chat_id"
+    get_id.return_value = "CHT:test_chat_id"
     monkeypatch.setattr("chat.main.get_id", get_id)
 
     get_format_time = Mock()
@@ -16,8 +16,6 @@ async def test_create_chat(client, redis, monkeypatch):
     response = await client.post("/chats", json={"name": "test_chat"})
     assert response.status_code == 200
     response_data = response.json()
-    print(response_data)
-    print(f'chat:{response_data["chat_id"]}')
     chat_data = await redis.hgetall(f'chat:{response_data["chat_id"]}')
     print(chat_data)
     assert response_data["name"] == "test_chat"

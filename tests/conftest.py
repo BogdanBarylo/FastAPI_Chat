@@ -7,6 +7,7 @@ from pydantic import Field
 from dotenv import load_dotenv
 import json
 from datetime import datetime
+import sys
 
 
 load_dotenv()
@@ -23,7 +24,9 @@ settings = Settings()
 @pytest_asyncio.fixture
 async def redis(monkeypatch):
     redis = aioredis.from_url(settings.redis_test_url, decode_responses=True)
-    monkeypatch.setattr("chat.conf.redis", redis)
+    monkeypatch.setattr("chat.main.redis", redis)
+    sys.modules["chat.db"].redis = redis
+    sys.modules["chat.main"].redis = redis
     yield redis
     await redis.flushdb()
     await redis.close()
