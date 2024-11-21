@@ -6,8 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 from dotenv import load_dotenv
 import json
-from datetime import datetime
-import sys
+from datetime import datetime, timezone
 
 
 load_dotenv()
@@ -24,9 +23,7 @@ settings = Settings()
 @pytest_asyncio.fixture
 async def redis(monkeypatch):
     redis = aioredis.from_url(settings.redis_test_url, decode_responses=True)
-    monkeypatch.setattr("chat.main.redis", redis)
-    sys.modules["chat.db"].redis = redis
-    sys.modules["chat.main"].redis = redis
+    monkeypatch.setattr("chat.db.redis", redis)
     yield redis
     await redis.flushdb()
     await redis.close()
@@ -63,9 +60,11 @@ async def test_data(redis):
         await pipe.hset(f'chat:{chat_data["chat_id"]}', mapping=chat_data)
         for message in messages:
             ts = message["ts"]
-            timestamp_score = datetime.fromisoformat(ts).timestamp()
-            print(ts)
-            print(timestamp_score)
+            timestamp_score = (
+                datetime.fromisoformat(ts)
+                .replace(tzinfo=timezone.utc)
+                .timestamp()
+            )
             await pipe.hset(
                 f'chat:{message["chat_id"]}:message',
                 message["message_id"],

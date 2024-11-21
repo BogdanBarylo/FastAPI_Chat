@@ -1,5 +1,4 @@
 from fastapi import Query, HTTPException, FastAPI
-from chat.conf import redis
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 from chat.db import (
@@ -16,6 +15,7 @@ from chat.db import (
 )
 
 app = FastAPI()
+
 
 class CreateChatRequest(BaseModel):
     name: str = Field(
@@ -73,11 +73,11 @@ async def create_message(
     ts = datetime.now(timezone.utc)
     formated_ts = get_format_time(ts)
     message_data = {
-            "chat_id": chat_id,
-            "message_id": message_id,
-            "text": message.text,
-            "ts": formated_ts,
-        }
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "text": message.text,
+        "ts": formated_ts,
+    }
     await save_message_to_db(message_data, ts)
     new_message = CreateMessageResponse(
         chat_id=chat_id,
@@ -120,7 +120,9 @@ async def get_messages(
         date_filter = ts_message.replace(tzinfo=timezone.utc).timestamp()
     else:
         date_filter = "+inf"
-    message_ids = await get_all_filtred_message_ids(chat_id, date_filter, limit)
+    message_ids = await get_all_filtred_message_ids(
+        chat_id, date_filter, limit
+    )
     messages = []
     message_data_list = await get_all_fitred_messages(chat_id, message_ids)
     for message_data in message_data_list:

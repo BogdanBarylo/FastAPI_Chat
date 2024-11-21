@@ -24,7 +24,6 @@ def get_format_time(ts):
 
 
 async def save_chat_to_db(chat_data):
-    print(f"Redis URL in save_chat_to_db: {redis.connection_pool.connection_kwargs}")
     await redis.hset(
         f"chat:{chat_data['chat_id']}",
         mapping={
@@ -33,10 +32,12 @@ async def save_chat_to_db(chat_data):
             "ts": chat_data["ts"],
         },
     )
-    print(f"Data saved to Redis: chat:{chat_data['chat_id']}")
 
 
 async def save_message_to_db(message_data, ts):
+    print(
+        f"Redis URL in save_message_to_db: {redis.connection_pool.connection_kwargs}"
+    )
     async with redis.pipeline(transaction=True) as pipe:
         message_data_serialized = json.dumps(message_data)
         await redis.hset(
@@ -60,7 +61,6 @@ async def get_all_filtred_message_ids(chat_id, date_filter, limit):
     return await redis.zrangebyscore(
         f"chat:{chat_id}:messages:ts", "-inf", date_filter, start=0, num=limit
     )
-    # ?
 
 
 async def get_all_fitred_messages(chat_id, message_ids):
@@ -87,5 +87,3 @@ async def del_chat_from_db(chat_id, message_ids):
         await redis.delete(f"chat:{chat_id}:messages:ts")
         await redis.delete(f"chat:{chat_id}")
         await pipe.execute()
-
-
