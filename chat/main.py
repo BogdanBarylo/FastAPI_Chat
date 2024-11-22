@@ -1,5 +1,11 @@
 from fastapi import Query, HTTPException, FastAPI
-from pydantic import BaseModel, Field
+from chat.models import (
+    CreateChatRequest,
+    CreateChatResponse,
+    CreateMessageRequest,
+    CreateMessageResponse,
+    GetMessagesResponse,
+)
 from datetime import datetime, timezone
 from chat.db import (
     get_id,
@@ -15,21 +21,6 @@ from chat.db import (
 )
 
 app = FastAPI()
-
-
-class CreateChatRequest(BaseModel):
-    name: str = Field(
-        min_length=1, max_length=120, description="Name of the chat"
-    )
-
-
-class CreateChatResponse(BaseModel):
-    chat_id: str = Field(description="Id of the chat")
-    name: str = Field(
-        min_length=1, max_length=120, description="Name of the chat"
-    )
-    url: str = Field(description="Url of the chat")
-    ts: datetime = Field(description="Create time")
 
 
 @app.post("/chats")
@@ -48,21 +39,6 @@ async def create_chat(chat: CreateChatRequest) -> CreateChatResponse:
         chat_id=chat_id, name=chat.name, url=url, ts=formated_ts
     )
     return chat_response
-
-
-class CreateMessageRequest(BaseModel):
-    text: str = Field(
-        min_length=1, max_length=500, description="Text of the message"
-    )
-
-
-class CreateMessageResponse(BaseModel):
-    chat_id: str = Field(description="Id of the chat")
-    message_id: str = Field(description="Id of the message")
-    text: str = Field(
-        min_length=1, max_length=500, description="Text of the message"
-    )
-    ts: datetime = Field(description="Create time")
 
 
 @app.post("/chats/{chat_id}/messages")
@@ -86,12 +62,6 @@ async def create_message(
         ts=formated_ts,
     )
     return new_message
-
-
-class GetMessagesResponse(BaseModel):
-    messages: list[CreateMessageResponse] = Field(
-        description="All founded messages in this chat"
-    )
 
 
 GetMessagesTsParam = Query(

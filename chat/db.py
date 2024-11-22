@@ -1,12 +1,14 @@
 from sqids import Sqids
 from chat.conf import redis
+from datetime import datetime
+from typing import List, Dict
 import json
 
 # def make_pipeline():
 #     def wrapper(*args, **kwargs):
 
 
-async def get_id(obj):
+async def get_id(obj: str) -> str:
     sqids = Sqids()
     if obj == "chat":
         chat_number = await redis.incr("chat_id_counter")
@@ -18,12 +20,12 @@ async def get_id(obj):
         return message_id
 
 
-def get_format_time(ts):
+def get_format_time(ts: datetime) -> str:
     formatted_ts = ts.strftime("%Y-%m-%dT%H:%M:%S")
     return formatted_ts
 
 
-async def save_chat_to_db(chat_data):
+async def save_chat_to_db(chat_data: Dict) -> None:
     await redis.hset(
         f"chat:{chat_data['chat_id']}",
         mapping={
@@ -34,10 +36,7 @@ async def save_chat_to_db(chat_data):
     )
 
 
-async def save_message_to_db(message_data, ts):
-    print(
-        f"Redis URL in save_message_to_db: {redis.connection_pool.connection_kwargs}"
-    )
+async def save_message_to_db(message_data: Dict, ts: datetime) -> None:
     async with redis.pipeline(transaction=True) as pipe:
         message_data_serialized = json.dumps(message_data)
         await redis.hset(
@@ -52,18 +51,20 @@ async def save_message_to_db(message_data, ts):
         await pipe.execute()
 
 
-async def check_chat_in_db(chat_id):
+async def check_chat_in_db(chat_id: str) -> bool:
     check = await redis.exists(f"chat:{chat_id}")
     return check
 
 
-async def get_all_filtred_message_ids(chat_id, date_filter, limit):
+async def get_all_filtred_message_ids(
+    chat_id: str, date_filter: str, limit: int
+) -> List:
     return await redis.zrangebyscore(
         f"chat:{chat_id}:messages:ts", "-inf", date_filter, start=0, num=limit
     )
 
 
-async def get_all_fitred_messages(chat_id, message_ids):
+async def get_all_fitred_messages(chat_id: str, message_ids: List) -> List:
     async with redis.pipeline() as pipe:
         for message_id in message_ids:
             pipe.hget(f"chat:{chat_id}:message", message_id)
@@ -71,16 +72,16 @@ async def get_all_fitred_messages(chat_id, message_ids):
     return message_data_list
 
 
-async def get_chat_data(chat_id):
+async def get_chat_data(chat_id: str) -> Dict:
     chat_data = await redis.hgetall(f"chat:{chat_id}")
     return chat_data
 
 
-async def get_all_messages_ids(chat_id):
+async def get_all_messages_ids(chat_id: str) -> List:
     return await redis.zrange(f"chat:{chat_id}:messages:ts", 0, -1)
 
 
-async def del_chat_from_db(chat_id, message_ids):
+async def del_chat_from_db(chat_id: str, message_ids: List) -> None:
     async with redis.pipeline(transaction=True) as pipe:
         for message_id in message_ids:
             await redis.delete(f"chat:{chat_id}:message:{message_id}")
