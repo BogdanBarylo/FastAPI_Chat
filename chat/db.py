@@ -1,22 +1,25 @@
 from sqids import Sqids
-from chat.conf import redis
 from datetime import datetime
+from redis import asyncio as aioredis
+from chat.conf import settings
 import json
 
-# def make_pipeline():
-#     def wrapper(*args, **kwargs):
+
+redis = aioredis.from_url(settings.redis_url, decode_responses=True)
 
 
-async def get_id(obj: str) -> str:
+async def get_chat_id() -> str:
     sqids = Sqids()
-    if obj == "chat":
-        chat_number = await redis.incr("chat_id_counter")
-        chat_id = f"CHT:{sqids.encode([chat_number])}"
-        return chat_id
-    elif obj == "message":
-        message_number = await redis.incr("message_id_counter")
-        message_id = f"MSG:{sqids.encode([message_number])}"
-        return message_id
+    chat_number = await redis.incr("chat_id_counter")
+    chat_id = f"CHT:{sqids.encode([chat_number])}"
+    return chat_id
+
+
+async def get_message_id() -> str:
+    sqids = Sqids()
+    message_number = await redis.incr("message_id_counter")
+    message_id = f"MSG:{sqids.encode([message_number])}"
+    return message_id
 
 
 def get_format_time(ts: datetime) -> str:
@@ -55,7 +58,7 @@ async def check_chat_in_db(chat_id: str) -> bool:
     return check
 
 
-async def get_all_filtred_message_ids(
+async def get_all_filtered_message_ids(
     chat_id: str, date_filter: str, limit: int
 ) -> list:
     return await redis.zrangebyscore(
@@ -63,7 +66,7 @@ async def get_all_filtred_message_ids(
     )
 
 
-async def get_all_fitred_messages(chat_id: str, message_ids: list) -> list:
+async def get_all_filtered_messages(chat_id: str, message_ids: list) -> list:
     async with redis.pipeline() as pipe:
         for message_id in message_ids:
             pipe.hget(f"chat:{chat_id}:message", message_id)
@@ -80,7 +83,7 @@ async def get_all_messages_ids(chat_id: str) -> list:
     return await redis.zrange(f"chat:{chat_id}:messages:ts", 0, -1)
 
 
-async def del_chat_from_db(chat_id: str, message_ids: list) -> None:
+async def del_chat(chat_id: str, message_ids: list) -> None:
     async with redis.pipeline(transaction=True) as pipe:
         for message_id in message_ids:
             await redis.delete(f"chat:{chat_id}:message:{message_id}")

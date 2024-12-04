@@ -5,13 +5,13 @@ import json
 
 @pytest.mark.asyncio
 async def test_create_chat(client, redis, monkeypatch):
-    get_id = AsyncMock()
-    get_id.return_value = "CHT:test_chat_id"
-    monkeypatch.setattr("chat.main.get_id", get_id)
+    get_chat_id = AsyncMock()
+    get_chat_id.return_value = "CHT:test_chat_id"
+    monkeypatch.setattr("chat.api.get_chat_id", get_chat_id)
 
     get_format_time = Mock()
     get_format_time.return_value = "2024-11-11T13:36:40"
-    monkeypatch.setattr("chat.main.get_format_time", get_format_time)
+    monkeypatch.setattr("chat.api.get_format_time", get_format_time)
     response = await client.post("/chats", json={"name": "test_chat"})
     assert response.status_code == 200
     response_data = response.json()
@@ -27,13 +27,13 @@ async def test_create_chat(client, redis, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_create_message(client, redis, monkeypatch, test_data):
-    get_id = AsyncMock()
-    get_id.return_value = "MSG:test_message_id"
-    monkeypatch.setattr("chat.main.get_id", get_id)
+    get_message_id = AsyncMock()
+    get_message_id.return_value = "MSG:test_message_id"
+    monkeypatch.setattr("chat.api.get_message_id", get_message_id)
 
     get_format_time = Mock()
     get_format_time.return_value = "2024-11-11T13:38:40"
-    monkeypatch.setattr("chat.main.get_format_time", get_format_time)
+    monkeypatch.setattr("chat.api.get_format_time", get_format_time)
 
     response = await client.post(
         "/chats/CHT:test_id/messages", json={"text": "Hi"}

@@ -1,0 +1,25 @@
+name: Chat CI/CD
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v3
+        - name: Set up Python
+          uses: actions/setup-python@v3
+          with:
+            python-version: 3.12
+        - name: Install dependencies
+          run: |
+            pip install poetry
+            make install
+        - name: Check Lint
+          run: make lint
+        - name: Run Tests
+          run: make test

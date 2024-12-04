@@ -1,5 +1,5 @@
 import aioredis
-from chat.main import app
+from chat.api import app
 from httpx import AsyncClient
 import pytest_asyncio
 from pydantic_settings import BaseSettings, SettingsConfigDict

@@ -11,4 +11,4 @@ fmt:
 	ruff check --fix && ruff format
 
 dev:
-	redis-server & uvicorn chat.main:app --reload
+	redis-server & fastapi dev chat/api.py

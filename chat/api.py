@@ -8,16 +8,17 @@ from chat.models import (
 )
 from datetime import datetime, timezone
 from chat.db import (
-    get_id,
+    get_chat_id,
+    get_message_id,
     get_format_time,
     save_chat_to_db,
     save_message_to_db,
     check_chat_in_db,
-    get_all_filtred_message_ids,
-    get_all_fitred_messages,
+    get_all_filtered_message_ids,
+    get_all_filtered_messages,
     get_chat_data,
     get_all_messages_ids,
-    del_chat_from_db,
+    del_chat,
 )
 
 app = FastAPI()
@@ -25,7 +26,7 @@ app = FastAPI()
 
 @app.post("/chats")
 async def create_chat(chat: CreateChatRequest) -> CreateChatResponse:
-    chat_id = await get_id("chat")
+    chat_id = await get_chat_id()
     ts = datetime.now(timezone.utc)
     formated_ts = get_format_time(ts)
     url = f"/chats/{chat_id}"
@@ -45,7 +46,7 @@ async def create_chat(chat: CreateChatRequest) -> CreateChatResponse:
 async def create_message(
     chat_id: str, message: CreateMessageRequest
 ) -> CreateMessageResponse:
-    message_id = await get_id("message")
+    message_id = await get_message_id()
     ts = datetime.now(timezone.utc)
     formated_ts = get_format_time(ts)
     message_data = {
@@ -90,11 +91,11 @@ async def get_messages(
         date_filter = ts_message.replace(tzinfo=timezone.utc).timestamp()
     else:
         date_filter = "+inf"
-    message_ids = await get_all_filtred_message_ids(
+    message_ids = await get_all_filtered_message_ids(
         chat_id, date_filter, limit
     )
     messages = []
-    message_data_list = await get_all_fitred_messages(chat_id, message_ids)
+    message_data_list = await get_all_filtered_messages(chat_id, message_ids)
     for message_data in message_data_list:
         if message_data:
             message_obj = CreateMessageResponse.model_validate_json(
@@ -113,4 +114,4 @@ async def delete_chat(chat_id: str):
             detail="Chat does not exist, please check if the id is correct",
         )
     message_ids = await get_all_messages_ids(chat_id)
-    await del_chat_from_db(chat_id, message_ids)
+    await del_chat(chat_id, message_ids)
