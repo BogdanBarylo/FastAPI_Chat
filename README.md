@@ -1,0 +1,1 @@
+[![Chat CI/CD](https://github.com/BogdanBarylo/FastAPI_Chat/actions/workflows/main.yml/badge.svg)](https://github.com/BogdanBarylo/FastAPI_Chat/actions/workflows/main.yml)
