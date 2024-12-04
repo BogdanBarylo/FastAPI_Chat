@@ -5,7 +5,7 @@ test:
 	poetry run pytest
 
 lint:
-	poetry run ruff check && ruff format --check
+	poetry run ruff check && poetry run ruff format --check
 
 fmt:
 	ruff check --fix && ruff format
