@@ -809,13 +809,13 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "rich-toolkit"
-version = "0.11.1"
+version = "0.11.2"
 description = "Rich toolkit for building command-line applications"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "rich_toolkit-0.11.1-py3-none-any.whl", hash = "sha256:d0192bc0643ab61cd8057ee6246058323a1616830798865f6ef0019c069ac94a"},
-    {file = "rich_toolkit-0.11.1.tar.gz", hash = "sha256:5f68fe642700fe88d67e7e899f08df5642eb9b7aa4452ceb85a65db005805422"},
+    {file = "rich_toolkit-0.11.2-py3-none-any.whl", hash = "sha256:28faa6eed48faed42e644de63dc045775bce38775eac010502f94f14f1b482d7"},
+    {file = "rich_toolkit-0.11.2.tar.gz", hash = "sha256:628f8d92b08c0f00be97cc841a90910807192f4f47364746750f42c8bc849ef3"},
 ]
 
 [package.dependencies]
@@ -870,6 +870,17 @@ python-versions = ">=3.7"
 files = [
     {file = "sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"},
     {file = "sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc"},
+]
+
+[[package]]
+name = "sqids"
+version = "0.5.0"
+description = "Generate YouTube-like ids from numbers."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "sqids-0.5.0-py3-none-any.whl", hash = "sha256:4c2d1eabf4721e6e18001b1ff2bc0b30d059447ef96f1e1d1fb7f56841814154"},
+    {file = "sqids-0.5.0.tar.gz", hash = "sha256:647798e7d5bfeb236e7ac4709cfd4cd808630a6c50f80205df17b4c93e560140"},
 ]
 
 [[package]]
@@ -1199,4 +1210,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "cbb46b446c0c4e7be4c2f82171b61cb86be6087f6dfe62ce15d7a7aef9660cab"
+content-hash = "8884dd8ff4360311c3db409866f4366eb0aafd5507961027887292abd7f483ba"
