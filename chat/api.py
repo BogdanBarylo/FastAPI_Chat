@@ -1,4 +1,4 @@
-from fastapi import Query, HTTPException, FastAPI
+from fastapi import Query, HTTPException, FastAPI, WebSocket
 from chat.models import (
     CreateChatRequest,
     CreateChatResponse,
@@ -20,6 +20,7 @@ from chat.db import (
     get_all_messages_ids,
     del_chat,
 )
+from chat.db import redis
 
 app = FastAPI()
 
@@ -115,3 +116,15 @@ async def delete_chat(chat_id: str):
         )
     message_ids = await get_all_messages_ids(chat_id)
     await del_chat(chat_id, message_ids)
+
+
+@app.websocket("/chats/<chat_id>/messages/new")
+async def show_new_message(websocket: WebSocket, chat_id: str):
+    pubsub = redis.pubsub()
+    await pubsub.subscribe(f"chat:{chat_id}:messages")
+    await websocket.accept()
+    async for message in pubsub.listen():
+            if message["type"] == "message":
+                await websocket.send_text(message["data"])
+    await pubsub.unsubscribe(f"chat:{chat_id}:messages")
+    await pubsub.close()
