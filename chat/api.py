@@ -63,8 +63,9 @@ async def create_message(
         text=message.text,
         ts=formated_ts,
     )
-    await redis.publish(f"chat:{chat_id}:messages",
-                        new_message.model_dump_json())
+    await redis.publish(
+        f"chat:{chat_id}:messages", new_message.model_dump_json()
+    )
     return new_message
 
 
@@ -126,7 +127,7 @@ async def show_new_message(websocket: WebSocket, chat_id: str):
     await pubsub.subscribe(f"chat:{chat_id}:messages")
     await websocket.accept()
     async for message in pubsub.listen():
-            if message["type"] == "message":
-                await websocket.send_text(message["data"])
+        if message["type"] == "message":
+            await websocket.send_text(message["data"])
     await pubsub.unsubscribe(f"chat:{chat_id}:messages")
     await pubsub.close()
