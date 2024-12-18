@@ -43,30 +43,31 @@ async def create_chat(chat: CreateChatRequest) -> CreateChatResponse:
     return chat_response
 
 
-@app.post("/chats/{chat_id}/messages")
-async def create_message(
-    chat_id: str, message: CreateMessageRequest
-) -> CreateMessageResponse:
+async def handle_message(chat_id: str, text: str) -> dict:
     message_id = await get_message_id()
     ts = datetime.now(timezone.utc)
     formated_ts = get_format_time(ts)
     message_data = {
         "chat_id": chat_id,
         "message_id": message_id,
-        "text": message.text,
+        "text": text,
         "ts": formated_ts,
     }
     await save_message_to_db(message_data, ts)
-    new_message = CreateMessageResponse(
-        chat_id=chat_id,
-        message_id=message_id,
-        text=message.text,
-        ts=formated_ts,
+    return message_data
+
+
+@app.post("/chats/{chat_id}/messages")
+async def create_message(
+    chat_id: str, message: CreateMessageRequest
+) -> CreateMessageResponse:
+    new_message = await handle_message(chat_id, message.text)
+    return CreateMessageResponse(
+        chat_id=new_message["chat_id"],
+        message_id=new_message["message_id"],
+        text=new_message["text"],
+        ts=new_message["ts"],
     )
-    await redis.publish(
-        f"chat:{chat_id}:messages", new_message.model_dump_json()
-    )
-    return new_message
 
 
 GetMessagesTsParam = Query(
@@ -126,6 +127,8 @@ async def show_new_message(websocket: WebSocket, chat_id: str):
     pubsub = redis.pubsub()
     await pubsub.subscribe(f"chat:{chat_id}:messages")
     await websocket.accept()
+    client_message = await websocket.receive_text()
+    await handle_message(chat_id, client_message)
     async for message in pubsub.listen():
         if message["type"] == "message":
             await websocket.send_text(message["data"])

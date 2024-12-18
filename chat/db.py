@@ -50,6 +50,9 @@ async def save_message_to_db(message_data: dict, ts: datetime) -> None:
             f"chat:{message_data['chat_id']}:messages:ts",
             {message_data["message_id"]: ts.timestamp()},
         )
+        await redis.publish(
+            f"chat:{message_data['chat_id']}:messages", message_data_serialized
+        )
         await pipe.execute()
 
 
