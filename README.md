@@ -38,7 +38,7 @@ A simple chat application built using FastAPI. This project demonstrates the use
     make dev
 2. This will start the Redis server (if not already running) and launch the FastAPI server.
 
-You can now access the application at ```bash http://localhost:8000.
+You can now access the application at http://localhost:8000.
 
 ## Usage
 Open http://localhost:8000/docs for interactive API documentation powered by FastAPI.
