@@ -1,4 +1,5 @@
 from fastapi import Query, HTTPException, FastAPI, WebSocket
+import asyncio
 from chat.models import (
     CreateChatRequest,
     CreateChatResponse,
@@ -127,10 +128,37 @@ async def show_new_message(websocket: WebSocket, chat_id: str):
     pubsub = redis.pubsub()
     await pubsub.subscribe(f"chat:{chat_id}:messages")
     await websocket.accept()
-    client_message = await websocket.receive_text()
-    await handle_message(chat_id, client_message)
-    async for message in pubsub.listen():
-        if message["type"] == "message":
-            await websocket.send_text(message["data"])
+
+    async def read_pubsub():
+        async for msg in pubsub.listen():
+            if msg["type"] == "message":
+                await websocket.send_text(msg["data"])
+
+    async def read_websocket():
+        while True:
+            client_message = await websocket.receive_text()
+            await handle_message(chat_id, client_message)
+
+    pubsub_task = asyncio.create_task(read_pubsub())
+    websocket_task = asyncio.create_task(read_websocket())
+    pending = await asyncio.wait(
+        [pubsub_task, websocket_task], return_when=asyncio.FIRST_EXCEPTION
+    )
+    for task in pending:
+        task.cancel()
     await pubsub.unsubscribe(f"chat:{chat_id}:messages")
     await pubsub.close()
+
+
+# @app.websocket("/chats/{chat_id}/messages/new")
+# async def show_new_message(websocket: WebSocket, chat_id: str):
+#     pubsub = redis.pubsub()
+#     await pubsub.subscribe(f"chat:{chat_id}:messages")
+#     await websocket.accept()
+#     client_message = await websocket.receive_text()
+#     await handle_message(chat_id, client_message)
+#     async for message in pubsub.listen():
+#         if message["type"] == "message":
+#             await websocket.send_text(message["data"])
+#     await pubsub.unsubscribe(f"chat:{chat_id}:messages")
+#     await pubsub.close()
