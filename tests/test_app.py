@@ -4,6 +4,10 @@ import json
 
 
 @pytest.mark.asyncio
+async def test_get_chat_id(redis):
+    pass
+
+@pytest.mark.asyncio
 async def test_create_chat(client, redis, monkeypatch):
     get_chat_id = AsyncMock()
     get_chat_id.return_value = "CHT:test_chat_id"
