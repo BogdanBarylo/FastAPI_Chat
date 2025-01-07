@@ -1,8 +1,8 @@
-import aioredis
+from redis import asyncio as aioredis
 from chat.api import app
 from httpx import AsyncClient
 import pytest_asyncio
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 from pydantic import Field
 from dotenv import load_dotenv
 import json
@@ -13,7 +13,6 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="APP_")
     redis_test_url: str = Field(env="REDIS_TEST_URL")
 
 

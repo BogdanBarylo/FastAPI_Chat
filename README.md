@@ -12,9 +12,8 @@ A simple chat application built using FastAPI. This project demonstrates the use
 
 ## Requirements
 
-- Python 3.7+
-- FastAPI
-- Uvicorn (ASGI server)
+- Python 3.10
+- Poetry
 - Other dependencies listed in `pyproject.toml`.
 
 ## Installation

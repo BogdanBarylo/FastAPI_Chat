@@ -2,10 +2,11 @@ from sqids import Sqids
 from datetime import datetime
 from redis import asyncio as aioredis
 from chat.conf import settings
+from redis.asyncio.client import Redis
 import json
 
 
-redis = aioredis.from_url(settings.redis_url, decode_responses=True)
+redis: Redis = aioredis.from_url(settings.redis_url, decode_responses=True)
 
 
 async def get_chat_id() -> str:

@@ -1,11 +1,37 @@
 import pytest
-from unittest.mock import Mock, AsyncMock
+from unittest.mock import Mock, AsyncMock, patch
 import json
+from chat.db import get_chat_id, get_message_id, get_format_time
+from datetime import datetime
 
 
 @pytest.mark.asyncio
-async def test_get_chat_id(redis):
-    pass
+async def test_get_chat_id():
+    with patch("chat.db.Sqids") as s, patch("chat.db.redis") as r:
+        r.incr = AsyncMock(return_value=1)
+        s.return_value.encode.return_value = "test_chat_id"
+        chat_id = await get_chat_id()
+        assert chat_id == "CHT:test_chat_id"
+        r.incr.assert_called_once_with("chat_id_counter")
+        s.return_value.encode.assert_called_once_with([1])
+
+
+@pytest.mark.asyncio
+async def test_get_message_id():
+    with patch("chat.db.Sqids") as s, patch("chat.db.redis") as r:
+        r.incr = AsyncMock(return_value=1)
+        s.return_value.encode.return_value = "test_message_id"
+        message_id = await get_message_id()
+        assert message_id == "MSG:test_message_id"
+        r.incr.assert_called_once_with("message_id_counter")
+        s.return_value.encode.assert_called_once_with([1])
+
+
+def test_get_format_time():
+    test_datetime = datetime(2023, 1, 1, 12, 30, 45)
+    formatted_time = get_format_time(test_datetime)
+    assert formatted_time == "2023-01-01T12:30:45"
+
 
 @pytest.mark.asyncio
 async def test_create_chat(client, redis, monkeypatch):
@@ -76,6 +102,16 @@ async def test_get_messages(client, test_data):
                 "ts": "2024-11-11T13:39:00",
             },
         ]
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_messages_not_existent(client):
+    response = await client.get("/chats/CHT:notexistent/messages")
+    assert response.status_code == 404
+    response_data = response.json()
+    assert response_data == {
+        "detail": "Chat does not exist, please check if the id is correct"
     }
 
 

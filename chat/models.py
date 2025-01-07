@@ -14,7 +14,7 @@ class CreateChatResponse(BaseModel):
         min_length=1, max_length=120, description="Name of the chat"
     )
     url: str = Field(description="Url of the chat")
-    ts: datetime = Field(description="Create time")
+    ts: str = Field(description="Create time")
 
 
 class CreateMessageRequest(BaseModel):
