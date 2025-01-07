@@ -23,6 +23,6 @@ jobs:
           run: make lint
         - name: Run Tests
           env:
-            APP_REDIS_URL: ${{ secrets.APP_REDIS_URL }}
-            APP_REDIS_TEST_URL: ${{ secrets.APP_REDIS_TEST_URL }}
+            REDIS_URL: ${{ secrets.APP_REDIS_URL }}
+            REDIS_TEST_URL: ${{ secrets.APP_REDIS_TEST_URL }}
           run: make test
