@@ -25,4 +25,9 @@ jobs:
           env:
             REDIS_URL: ${{ secrets.APP_REDIS_URL }}
             REDIS_TEST_URL: ${{ secrets.APP_REDIS_TEST_URL }}
-          run: make test
+          run: make test-coverage
+        - name: Upload coverage to Codecov
+          uses: codecov/codecov-action@v3
+          with:
+            files: ./coverage.xml
+            fail_ci_if_error: true

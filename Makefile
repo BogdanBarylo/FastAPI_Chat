@@ -5,7 +5,7 @@ test:
 	poetry run pytest
 
 test-coverage:
-	poetry run pytest --cov=chat --cov-report=term-missing
+	poetry run pytest --cov=chat --cov-report=xml --cov-report=term-missing
 
 lint:
 	poetry run ruff check && poetry run ruff format --check
