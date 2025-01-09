@@ -46,7 +46,6 @@ async def test_create_chat(client, redis, monkeypatch):
     assert response.status_code == 200
     response_data = response.json()
     chat_data = await redis.hgetall(f'chat:{response_data["chat_id"]}')
-    print(chat_data)
     assert response_data["name"] == "test_chat"
     assert chat_data == {
         "name": "test_chat",
@@ -72,7 +71,6 @@ async def test_create_message(client, redis, monkeypatch, test_data):
     message_data = await redis.hget(
         "chat:CHT:test_id:message", "MSG:test_message_id"
     )
-    print(message_data)
     message_data = json.loads(message_data)
     assert message_data == {
         "chat_id": "CHT:test_id",
@@ -159,3 +157,15 @@ async def test_del_chat(client, test_data):
     assert response_data is None
     response = await client.delete("/chats/CHT:test_id")
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_show_new_message(client, redis):
+    with patch("chat.api.redis") as r:
+        r.pubsub.listen.return_value = {
+            "type": "message",
+            "chat_id": "CHT:test_id",
+            "message_id": "MSG:test_id_1",
+            "text": "hi, its test 1!",
+            "ts": "2024-11-11T13:37:40",
+        }

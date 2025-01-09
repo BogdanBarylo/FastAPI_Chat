@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "chat"
 version = "0.1.0"
-description = ""
+description = "Fast API Chat"
 authors = ["BogdanBarylo <barylob@gmail.com>"]
 readme = "README.md"
 
