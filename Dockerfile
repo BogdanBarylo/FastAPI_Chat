@@ -8,7 +8,9 @@ WORKDIR /app
 
 RUN pip install poetry
 
-COPY pyproject.toml poetry.lock
+COPY pyproject.toml .
+
+COPY poetry.lock .
 
 RUN poetry install --without dev --no-interaction --no-ansi
 

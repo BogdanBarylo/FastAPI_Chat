@@ -2,11 +2,10 @@ from sqids import Sqids
 from datetime import datetime
 from redis import asyncio as aioredis
 from chat.conf import settings
-from redis.asyncio.client import Redis
 import json
 
 
-redis: Redis = aioredis.from_url(settings.redis_url, decode_responses=True)
+redis = aioredis.from_url(settings.redis_url, decode_responses=True)
 
 
 async def get_chat_id() -> str:
@@ -57,7 +56,7 @@ async def save_message_to_db(message_data: dict, ts: datetime) -> None:
         await pipe.execute()
 
 
-async def check_chat_in_db(chat_id: str) -> bool:
+async def check_chat_in_db(chat_id: str) -> int:
     check = await redis.exists(f"chat:{chat_id}")
     return check
 

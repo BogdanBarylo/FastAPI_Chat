@@ -169,3 +169,6 @@ async def test_show_new_message(client, redis):
             "text": "hi, its test 1!",
             "ts": "2024-11-11T13:37:40",
         }
+
+    # 1. замокать ридпасаб лисен и сенд текст
+    # 2. рид вебсокет

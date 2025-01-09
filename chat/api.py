@@ -93,9 +93,8 @@ async def get_messages(
             status_code=404,
             detail="Chat does not exist, please check if the id is correct",
         )
-    messages = []
     if ts_message:
-        date_filter = ts_message.replace(tzinfo=timezone.utc).timestamp()
+        date_filter = str(ts_message.replace(tzinfo=timezone.utc).timestamp())
     else:
         date_filter = "+inf"
     message_ids = await get_all_filtered_message_ids(

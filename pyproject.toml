@@ -15,6 +15,7 @@ python-dotenv = "^1.0.1"
 pydantic-settings = "^2.6.1"
 sqids = "^0.5.0"
 websockets = "^14.1"
+types-redis = "^4.6.0.20241004"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -33,6 +34,7 @@ build-backend = "poetry.core.masonry.api"
 line-length = 79
 
 [tool.mypy]
+plugins = ['pydantic.mypy']
 disallow_untyped_calls = true
 disallow_untyped_defs = true
 ignore_missing_imports = true
