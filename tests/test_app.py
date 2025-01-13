@@ -159,16 +159,31 @@ async def test_del_chat(client, test_data):
     assert response.status_code == 404
 
 
-@pytest.mark.asyncio
-async def test_show_new_message(client, redis):
-    with patch("chat.api.redis") as r:
-        r.pubsub.listen.return_value = {
-            "type": "message",
-            "chat_id": "CHT:test_id",
-            "message_id": "MSG:test_id_1",
-            "text": "hi, its test 1!",
-            "ts": "2024-11-11T13:37:40",
-        }
+# @pytest.mark.asyncio
+# async def test_show_new_message(client, redis):
+#     with client.websocket_connect("/ws://127.0.0.1:8000/chats/CHT:test_id/messages/new") as websocket:
+#         data = websocket.receive_json()
+        
+    
+#     with patch("chat.api.redis") as r:
+#         r.pubsub.listen.return_value = {
+#             "type": "message",
+#             "chat_id": "CHT:test_id",
+#             "message_id": "MSG:test_id_1",
+#             "text": "hi, its test 1!",
+#             "ts": "2024-11-11T13:37:40",
+#         }
 
     # 1. замокать ридпасаб лисен и сенд текст
     # 2. рид вебсокет
+# @pytest.mark.asyncio
+# async def test_show_new_message(client, websocket_client, redis):
+#     with websocket_client.websocket_connect("/chats/CHT:test_id/messages/new") as websocket:
+#         await client.post("/chats/CHT:test_id/messages", json={"text": "Hi, test!"})
+#         data = websocket.receive_json()
+#         assert data["text"] == "Hi, test!"
+
+def test_websocket(web_client):
+    with web_client.websocket_connect("/chats/CHT:test_id/messages/new") as websocket:
+        data = websocket.receive_json()
+        assert data == {"msg": "Hello WebSocket"}
