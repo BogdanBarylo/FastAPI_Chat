@@ -3,6 +3,7 @@ from unittest.mock import Mock, AsyncMock, patch
 import json
 from chat.db import get_chat_id, get_message_id, get_format_time
 from datetime import datetime
+from async_asgi_testclient import TestClient
 
 
 @pytest.mark.asyncio
@@ -163,8 +164,8 @@ async def test_del_chat(client, test_data):
 # async def test_show_new_message(client, redis):
 #     with client.websocket_connect("/ws://127.0.0.1:8000/chats/CHT:test_id/messages/new") as websocket:
 #         data = websocket.receive_json()
-        
-    
+
+
 #     with patch("chat.api.redis") as r:
 #         r.pubsub.listen.return_value = {
 #             "type": "message",
@@ -174,8 +175,8 @@ async def test_del_chat(client, test_data):
 #             "ts": "2024-11-11T13:37:40",
 #         }
 
-    # 1. замокать ридпасаб лисен и сенд текст
-    # 2. рид вебсокет
+# 1. замокать ридпасаб лисен и сенд текст
+# 2. рид вебсокет
 # @pytest.mark.asyncio
 # async def test_show_new_message(client, websocket_client, redis):
 #     with websocket_client.websocket_connect("/chats/CHT:test_id/messages/new") as websocket:
@@ -183,7 +184,15 @@ async def test_del_chat(client, test_data):
 #         data = websocket.receive_json()
 #         assert data["text"] == "Hi, test!"
 
-def test_websocket(web_client):
-    with web_client.websocket_connect("/chats/CHT:test_id/messages/new") as websocket:
-        data = websocket.receive_json()
-        assert data == {"msg": "Hello WebSocket"}
+
+@pytest.mark.asyncio
+async def test_show_new_message():
+    from chat.api import app
+
+    async with TestClient(app) as client:
+        async with client.websocket_connect(
+            "/chats/CHT:test_id/messages/new"
+        ) as websocket:
+            await websocket.send_json({"text": "Hi from test"})
+            msg = await websocket.receive_json()
+            assert msg == "Hi from test"

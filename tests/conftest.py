@@ -1,14 +1,12 @@
 from redis import asyncio as aioredis
 from chat.api import app
 from httpx import AsyncClient
-from pytest import fixture
 import pytest_asyncio
 from pydantic_settings import BaseSettings
 from pydantic import Field
 from dotenv import load_dotenv
 import json
 from datetime import datetime, timezone
-from fastapi.testclient import TestClient
 
 load_dotenv()
 
@@ -82,9 +80,3 @@ async def test_data(redis):
         *(f'chat:{message["chat_id"]}:message' for message in messages),
         f'chat:{messages[0]["chat_id"]}:messages:ts',
     )
-
-
-@fixture
-def web_client():
-    client = TestClient(app)
-    yield client

@@ -5,3 +5,4 @@
 dump.rdb
 .coverage
 coverage.xml
+.dockerignore

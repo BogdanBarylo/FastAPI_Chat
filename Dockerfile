@@ -12,9 +12,9 @@ COPY pyproject.toml .
 
 COPY poetry.lock .
 
-RUN poetry install --without dev --no-interaction --no-ansi
-
 COPY . .
+
+RUN poetry install --without dev --no-interaction --no-ansi
 
 EXPOSE 8000
 
