@@ -4,6 +4,7 @@ import json
 from chat.db import get_chat_id, get_message_id, get_format_time
 from datetime import datetime
 from async_asgi_testclient import TestClient
+from chat.api import app
 
 
 @pytest.mark.asyncio
@@ -185,14 +186,23 @@ async def test_del_chat(client, test_data):
 #         assert data["text"] == "Hi, test!"
 
 
-@pytest.mark.asyncio
-async def test_show_new_message():
-    from chat.api import app
+# @pytest.mark.asyncio
+# async def test_show_new_message():
+#     from chat.api import app
 
+#     async with TestClient(app) as client:
+#         async with client.websocket_connect(
+#             "/chats/CHT:test_id/messages/new"
+#         ) as websocket:
+#             await websocket.send_json({"text": "Hi from test"})
+#             msg = await websocket.receive_json()
+#             assert msg == "Hi from test"
+
+
+@pytest.mark.asyncio
+async def test_show_new_message(redis):
     async with TestClient(app) as client:
-        async with client.websocket_connect(
-            "/chats/CHT:test_id/messages/new"
-        ) as websocket:
-            await websocket.send_json({"text": "Hi from test"})
-            msg = await websocket.receive_json()
-            assert msg == "Hi from test"
+        async with client.websocket_connect("/chats/CHT:test_id/messages/new") as websocket:
+            await redis.publish("chat:CHT:test_id:messages", "Hello from test")
+            msg = await websocket.receive_text()
+            assert msg == "Hello from test"
