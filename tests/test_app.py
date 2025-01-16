@@ -1,10 +1,8 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
+from datetime import datetime
 import json
 from chat.db import get_chat_id, get_message_id, get_format_time
-from datetime import datetime
-from async_asgi_testclient import TestClient
-from chat.api import app
 
 
 @pytest.mark.asyncio
@@ -161,48 +159,13 @@ async def test_del_chat(client, test_data):
     assert response.status_code == 404
 
 
-# @pytest.mark.asyncio
-# async def test_show_new_message(client, redis):
-#     with client.websocket_connect("/ws://127.0.0.1:8000/chats/CHT:test_id/messages/new") as websocket:
-#         data = websocket.receive_json()
-
-
-#     with patch("chat.api.redis") as r:
-#         r.pubsub.listen.return_value = {
-#             "type": "message",
-#             "chat_id": "CHT:test_id",
-#             "message_id": "MSG:test_id_1",
-#             "text": "hi, its test 1!",
-#             "ts": "2024-11-11T13:37:40",
-#         }
-
-# 1. замокать ридпасаб лисен и сенд текст
-# 2. рид вебсокет
-# @pytest.mark.asyncio
-# async def test_show_new_message(client, websocket_client, redis):
-#     with websocket_client.websocket_connect("/chats/CHT:test_id/messages/new") as websocket:
-#         await client.post("/chats/CHT:test_id/messages", json={"text": "Hi, test!"})
-#         data = websocket.receive_json()
-#         assert data["text"] == "Hi, test!"
-
-
-# @pytest.mark.asyncio
-# async def test_show_new_message():
-#     from chat.api import app
-
-#     async with TestClient(app) as client:
-#         async with client.websocket_connect(
-#             "/chats/CHT:test_id/messages/new"
-#         ) as websocket:
-#             await websocket.send_json({"text": "Hi from test"})
-#             msg = await websocket.receive_json()
-#             assert msg == "Hi from test"
-
-
 @pytest.mark.asyncio
-async def test_show_new_message(redis):
-    async with TestClient(app) as client:
-        async with client.websocket_connect("/chats/CHT:test_id/messages/new") as websocket:
-            await redis.publish("chat:CHT:test_id:messages", "Hello from test")
-            msg = await websocket.receive_text()
-            assert msg == "Hello from test"
+async def test_show_new_message(websocket_client, websocket_redis, monkeypatch):
+    handle_message_mock = AsyncMock()
+    monkeypatch.setattr("chat.api.handle_message", handle_message_mock)
+    async with websocket_client.websocket_connect("/chats/CHT:test_id/messages/new") as websocket:
+        await websocket.send_text("Hello from test!")
+        await websocket_redis.publish("chat:CHT:test_id:messages", "Hello from test")
+        msg = await websocket.receive_text()
+        assert msg == "Hello from test"
+    handle_message_mock.assert_awaited_once_with("CHT:test_id", "Hello from test!")

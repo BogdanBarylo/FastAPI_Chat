@@ -1,4 +1,5 @@
 from redis import asyncio as aioredis
+from async_asgi_testclient import TestClient
 from chat.api import app
 from httpx import AsyncClient
 import pytest_asyncio
@@ -28,8 +29,23 @@ async def redis(monkeypatch):
 
 
 @pytest_asyncio.fixture
+async def websocket_redis(monkeypatch):
+    redis = aioredis.from_url(settings.redis_test_url, decode_responses=True)
+    monkeypatch.setattr("chat.api.redis", redis)
+    yield redis
+    await redis.flushdb()
+    await redis.close()
+
+
+@pytest_asyncio.fixture
 async def client():
     async with AsyncClient(app=app, base_url="http://test") as client:
+        yield client
+
+
+@pytest_asyncio.fixture
+async def websocket_client():
+    async with TestClient(app) as client:
         yield client
 
 

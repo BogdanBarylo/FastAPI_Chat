@@ -12,7 +12,9 @@ COPY pyproject.toml .
 
 COPY poetry.lock .
 
-COPY . .
+COPY chat/ ./chat/
+
+COPY Makefile .
 
 RUN poetry install --without dev --no-interaction --no-ansi
 

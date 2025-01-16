@@ -141,8 +141,10 @@ async def show_new_message(websocket: WebSocket, chat_id: str) -> None:
     channel = f"chat:{chat_id}:messages"
     await pubsub.subscribe(channel)
     await websocket.accept()
-    await asyncio.gather(
-        read_pubsub(pubsub, websocket), read_websocket(websocket, chat_id)
-    )
-    await pubsub.unsubscribe(channel)
-    await pubsub.close()
+    try:
+        await asyncio.gather(
+            read_pubsub(pubsub, websocket), read_websocket(websocket, chat_id)
+        )
+    finally:
+        await pubsub.unsubscribe(channel)
+        await pubsub.close()
