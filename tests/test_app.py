@@ -160,12 +160,20 @@ async def test_del_chat(client, test_data):
 
 
 @pytest.mark.asyncio
-async def test_show_new_message(websocket_client, websocket_redis, monkeypatch):
+async def test_show_new_message(
+    websocket_client, websocket_redis, monkeypatch
+):
     handle_message_mock = AsyncMock()
     monkeypatch.setattr("chat.api.handle_message", handle_message_mock)
-    async with websocket_client.websocket_connect("/chats/CHT:test_id/messages/new") as websocket:
+    async with websocket_client.websocket_connect(
+        "/chats/CHT:test_id/messages/new"
+    ) as websocket:
         await websocket.send_text("Hello from test!")
-        await websocket_redis.publish("chat:CHT:test_id:messages", "Hello from test")
+        await websocket_redis.publish(
+            "chat:CHT:test_id:messages", "Hello from test"
+        )
         msg = await websocket.receive_text()
         assert msg == "Hello from test"
-    handle_message_mock.assert_awaited_once_with("CHT:test_id", "Hello from test!")
+    handle_message_mock.assert_awaited_once_with(
+        "CHT:test_id", "Hello from test!"
+    )
