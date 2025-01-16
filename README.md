@@ -1,7 +1,7 @@
 [![Chat CI/CD](https://github.com/BogdanBarylo/FastAPI_Chat/actions/workflows/main.yml/badge.svg)](https://github.com/BogdanBarylo/FastAPI_Chat/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/BogdanBarylo/FastAPI_Chat/graph/badge.svg?token=AEUSZYIAAR)](https://codecov.io/gh/BogdanBarylo/FastAPI_Chat)
 
-# FastAPI Chat
+# fastapi-chat
 
 A simple chat application built using FastAPI. This project demonstrates the use of FastAPI to create a real-time chat application with basic functionalities.
 
